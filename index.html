@@ -12,11 +12,13 @@
             font-family: 'Vazirmatn', sans-serif;
             scroll-behavior: smooth;
         }
+
         .file-input-container {
             position: relative;
             width: 100%;
             height: 12rem;
         }
+
         .file-input-label {
             display: flex;
             justify-content: center;
@@ -28,10 +30,12 @@
             cursor: pointer;
             transition: background-color 0.2s, border-color 0.2s;
         }
-        .file-input-label:hover {
-            background-color: #f1f5f9;
-            border-color: #94a3b8;
-        }
+
+            .file-input-label:hover {
+                background-color: #f1f5f9;
+                border-color: #94a3b8;
+            }
+
         #image-preview {
             max-width: 100%;
             max-height: 11rem;
@@ -39,21 +43,30 @@
             margin: 0.5rem auto;
             display: block;
         }
+
         .loader {
-          border: 4px solid #f3f3f3;
-          border-top: 4px solid #3498db;
-          border-radius: 50%;
-          width: 24px;
-          height: 24px;
-          animation: spin 1s linear infinite;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
         }
+
         .spinner {
             display: none;
         }
+
         @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
+
         .gemini-button {
             background: linear-gradient(90deg, #4f46e5, #818cf8);
         }
@@ -62,7 +75,7 @@
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
 
     <div class="w-full max-w-md mx-auto bg-white rounded-2xl shadow-lg p-6 md:p-8">
-        
+
         <div class="text-center mb-6">
             <h1 class="text-2xl md:text-3xl font-bold text-gray-800">تشخیص سلامت برگ</h1>
             <p class="text-gray-500 mt-2">با قدرت هوش مصنوعی Gemini تصویر برگ را تحلیل کنید</p>
@@ -79,17 +92,17 @@
                 <input type="file" id="leaf-image-upload" class="hidden" accept="image/*">
             </div>
             <div id="image-preview-container" class="mt-4 hidden text-center">
-                 <img id="image-preview" src="#" alt="پیش‌نمایش برگ">
+                <img id="image-preview" src="#" alt="پیش‌نمایش برگ">
             </div>
         </div>
-        
+
         <button id="scan-button" class="w-full bg-green-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-700 transition-colors duration-300 flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
             <i class="fas fa-camera"></i>
             <span id="scan-button-text">اسکن تصویر</span>
             <div class="loader spinner" id="scan-loader"></div>
         </button>
 
-        <!-- Error Message -->
+        <!-- Error Message Box - IMPROVED -->
         <div id="error-message" class="mt-4 p-3 bg-red-100 border border-red-300 text-red-800 rounded-lg hidden text-center"></div>
 
         <!-- Result Section -->
@@ -98,17 +111,17 @@
             <div id="result-display" class="p-4 rounded-lg text-white">
                 <p class="text-2xl font-bold mb-1" id="status-text"></p>
             </div>
-            
+
             <button id="gemini-remedy-button" class="w-full mt-4 gemini-button text-white font-bold py-3 px-4 rounded-lg hover:opacity-90 transition-opacity duration-300 flex items-center justify-center gap-2 hidden">
                 <span>✨ دریافت راهکار درمانی با AI</span>
                 <div class="loader spinner" id="remedy-loader"></div>
             </button>
         </div>
-        
+
         <!-- Remedy Section -->
         <div id="remedy-section" class="mt-6 hidden">
-             <h3 class="text-lg font-bold text-gray-800 text-center mb-3">برنامه درمانی پیشنهادی</h3>
-             <div id="remedy-content" class="p-4 bg-gray-50 border rounded-lg space-y-2 text-gray-700 whitespace-pre-wrap"></div>
+            <h3 class="text-lg font-bold text-gray-800 text-center mb-3">برنامه درمانی پیشنهادی</h3>
+            <div id="remedy-content" class="p-4 bg-gray-50 border rounded-lg space-y-2 text-gray-700 whitespace-pre-wrap"></div>
         </div>
 
     </div>
@@ -135,16 +148,16 @@
         let file = null;
         let diseaseName = '';
 
-        // Gemini API Configuration
-        const apiKey = "AIzaSyDUCAkR349AqNXBQ9PqEk_a8PwlG_Fjpg0"; // This will be handled by the execution environment.
-        const visionApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-        const textApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+        // --- IMPORTANT: PASTE YOUR API KEY HERE ---
+        const apiKey = "AIzaSyDUCAkR349AqNXBQ9PqEk_a8PwlG_Fjpg0"; // <--- کلید API خود را اینجا قرار دهید
 
-        // Event listener for file selection
+        // Gemini API Configuration
+        const visionApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent?key=${apiKey}`;
+        const textApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+
         imageUploadInput.addEventListener('change', (event) => {
             file = event.target.files[0];
             if (file) {
-                // Check file size (Gemini has a 4MB limit for images)
                 if (file.size > 4 * 1024 * 1024) {
                     showError("حجم فایل نباید بیشتر از 4 مگابایت باشد.");
                     return;
@@ -163,12 +176,14 @@
                 reader.readAsDataURL(file);
             }
         });
-        
+
         uploadLabel.addEventListener('click', () => imageUploadInput.click());
 
-        // Scan button click handler
         scanButton.addEventListener('click', async () => {
-            if (!file) return;
+            if (!file || !apiKey) {
+                showError("لطفا ابتدا کلید API خود را در کد قرار دهید.");
+                return;
+            }
 
             setLoading(scanButton, scanButtonText, scanLoader, true, 'در حال تحلیل...');
             hideError();
@@ -177,7 +192,7 @@
 
             try {
                 const base64Data = await getBase64(file);
-                
+
                 const payload = {
                     contents: [{
                         parts: [
@@ -193,90 +208,98 @@
                     body: JSON.stringify(payload)
                 });
 
+                const result = await response.json();
+
                 if (!response.ok) {
-                    throw new Error(`خطای سرور: ${response.status}`);
+                    const errorDetails = result.error ? result.error.message : `خطای ${response.status}`;
+                    throw new Error(errorDetails);
                 }
 
-                const result = await response.json();
+                if (!result.candidates || result.candidates.length === 0) {
+                    throw new Error('پاسخ نامعتبر از سرور دریافت شد.');
+                }
+
                 const diagnosis = result.candidates[0]?.content?.parts[0]?.text?.trim() || 'تشخیص ناممکن بود';
-                
+
                 displayResult(diagnosis);
 
             } catch (error) {
-                console.error('Error during diagnosis:', error);
-                showError('خطایی در تحلیل تصویر رخ داد. لطفا دوباره تلاش کنید.');
+                console.error('Diagnosis Error:', error);
+                showError(`خطا در تحلیل: ${error.message}`);
             } finally {
                 setLoading(scanButton, scanButtonText, scanLoader, false, 'اسکن تصویر');
             }
         });
-        
-        // Get remedy button click handler
+
         geminiRemedyButton.addEventListener('click', async () => {
             if (!diseaseName) return;
-            
+
             setLoading(geminiRemedyButton, null, remedyLoader, true);
             hideError();
             remedySection.classList.add('hidden');
 
             try {
-                 const prompt = `برای یک باغبان خانگی، یک برنامه درمانی ساده و گام به گام برای بیماری گیاه "${diseaseName}" به زبان فارسی بنویس. شامل راهکارهای ارگانیک و در صورت لزوم شیمیایی باش. متن را ساده و خوانا نگه دار.`;
-                 
-                 const payload = {
-                    contents: [{ parts: [{ text: prompt }] }]
-                 };
+                const prompt = `برای یک باغبان خانگی، یک برنامه درمانی ساده و گام به گام برای بیماری گیاه "${diseaseName}" به زبان فارسی بنویس. شامل راهکارهای ارگانیک و در صورت لزوم شیمیایی باش. متن را ساده و خوانا نگه دار.`;
 
-                 const response = await fetch(textApiUrl, {
+                const payload = { contents: [{ parts: [{ text: prompt }] }] };
+
+                const response = await fetch(textApiUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
                 });
 
+                const result = await response.json();
+
                 if (!response.ok) {
-                    throw new Error(`خطای سرور: ${response.status}`);
+                    const errorDetails = result.error ? result.error.message : `خطای ${response.status}`;
+                    throw new Error(errorDetails);
                 }
 
-                const result = await response.json();
+                if (!result.candidates || result.candidates.length === 0) {
+                    throw new Error('پاسخ نامعتبر از سرور دریافت شد.');
+                }
+
                 const remedyText = result.candidates[0]?.content?.parts[0]?.text?.trim() || 'متاسفانه پیشنهادی یافت نشد.';
-                
+
                 remedyContent.textContent = remedyText;
                 remedySection.classList.remove('hidden');
 
             } catch (error) {
-                console.error('Error getting remedy:', error);
-                showError('خطا در دریافت راهکار درمانی.');
+                console.error('Remedy Error:', error);
+                showError(`خطا در دریافت راهکار: ${error.message}`);
             } finally {
                 setLoading(geminiRemedyButton, null, remedyLoader, false);
             }
         });
 
-        // --- Helper Functions ---
-
         function displayResult(diagnosis) {
             resultSection.classList.remove('hidden');
             statusText.textContent = diagnosis;
-
             if (diagnosis.toLowerCase().includes('سالم')) {
                 resultDisplay.className = 'p-4 rounded-lg text-white bg-green-500';
                 geminiRemedyButton.classList.add('hidden');
                 diseaseName = '';
             } else {
                 resultDisplay.className = 'p-4 rounded-lg text-white bg-orange-500';
-                diseaseName = diagnosis; // Store the disease name
+                diseaseName = diagnosis;
                 geminiRemedyButton.classList.remove('hidden');
             }
         }
 
         function setLoading(button, textElement, loader, isLoading, loadingText = '') {
             button.disabled = isLoading;
+            const spanElement = button.querySelector('span');
             if (isLoading) {
                 loader.style.display = 'block';
-                if(textElement) textElement.textContent = loadingText;
+                if (spanElement) spanElement.textContent = loadingText;
             } else {
                 loader.style.display = 'none';
-                 if(textElement) textElement.textContent = 'اسکن تصویر'; // Reset text
+                if (spanElement && textElement) spanElement.textContent = textElement.textContent;
+                else if (spanElement) spanElement.textContent = '✨ دریافت راهکار درمانی با AI';
             }
         }
-        
+
         function showError(message) {
             errorMessage.textContent = message;
             errorMessage.classList.remove('hidden');
@@ -291,7 +314,6 @@
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
                 reader.onload = () => {
-                    // Remove the data URL prefix
                     const base64 = reader.result.split(',')[1];
                     resolve(base64);
                 };
