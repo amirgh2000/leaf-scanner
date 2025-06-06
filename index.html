@@ -3,22 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تشخیص سلامت برگ با هوش مصنوعی</title>
+    <title>تشخیص سلامت برگ (نسخه آزمایشی)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;700&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Vazirmatn', sans-serif;
-            scroll-behavior: smooth;
         }
-
         .file-input-container {
             position: relative;
             width: 100%;
             height: 12rem;
         }
-
         .file-input-label {
             display: flex;
             justify-content: center;
@@ -30,12 +27,10 @@
             cursor: pointer;
             transition: background-color 0.2s, border-color 0.2s;
         }
-
-            .file-input-label:hover {
-                background-color: #f1f5f9;
-                border-color: #94a3b8;
-            }
-
+        .file-input-label:hover {
+            background-color: #f1f5f9;
+            border-color: #94a3b8;
+        }
         #image-preview {
             max-width: 100%;
             max-height: 11rem;
@@ -43,42 +38,29 @@
             margin: 0.5rem auto;
             display: block;
         }
-
         .loader {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #3498db;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-        }
-
-        .spinner {
-            display: none;
+          border: 4px solid #f3f3f3;
+          border-top: 4px solid #3498db;
+          border-radius: 50%;
+          width: 24px;
+          height: 24px;
+          animation: spin 1s linear infinite;
+          display: none; /* Hidden by default */
         }
 
         @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        .gemini-button {
-            background: linear-gradient(90deg, #4f46e5, #818cf8);
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
 
     <div class="w-full max-w-md mx-auto bg-white rounded-2xl shadow-lg p-6 md:p-8">
-
+        
         <div class="text-center mb-6">
             <h1 class="text-2xl md:text-3xl font-bold text-gray-800">تشخیص سلامت برگ</h1>
-            <p class="text-gray-500 mt-2">با قدرت هوش مصنوعی Gemini تصویر برگ را تحلیل کنید</p>
+            <p class="text-gray-500 mt-2">یک تصویر از برگ مورد نظر را برای تحلیل بارگذاری کنید</p>
         </div>
 
         <div class="mb-4">
@@ -92,42 +74,31 @@
                 <input type="file" id="leaf-image-upload" class="hidden" accept="image/*">
             </div>
             <div id="image-preview-container" class="mt-4 hidden text-center">
-                <img id="image-preview" src="#" alt="پیش‌نمایش برگ">
+                 <img id="image-preview" src="#" alt="پیش‌نمایش برگ">
             </div>
         </div>
-
+        
         <button id="scan-button" class="w-full bg-green-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-700 transition-colors duration-300 flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
             <i class="fas fa-camera"></i>
             <span id="scan-button-text">اسکن تصویر</span>
-            <div class="loader spinner" id="scan-loader"></div>
+            <div class="loader" id="loader"></div>
         </button>
-
-        <!-- Error Message Box - IMPROVED -->
-        <div id="error-message" class="mt-4 p-3 bg-red-100 border border-red-300 text-red-800 rounded-lg hidden text-center"></div>
 
         <!-- Result Section -->
         <div id="result-section" class="mt-6 text-center hidden">
             <h2 class="text-xl font-bold text-gray-700 mb-3">نتیجه تحلیل:</h2>
             <div id="result-display" class="p-4 rounded-lg text-white">
                 <p class="text-2xl font-bold mb-1" id="status-text"></p>
+                <p class="text-sm opacity-90" id="confidence-text"></p>
             </div>
-
-            <button id="gemini-remedy-button" class="w-full mt-4 gemini-button text-white font-bold py-3 px-4 rounded-lg hover:opacity-90 transition-opacity duration-300 flex items-center justify-center gap-2 hidden">
-                <span>✨ دریافت راهکار درمانی با AI</span>
-                <div class="loader spinner" id="remedy-loader"></div>
-            </button>
-        </div>
-
-        <!-- Remedy Section -->
-        <div id="remedy-section" class="mt-6 hidden">
-            <h3 class="text-lg font-bold text-gray-800 text-center mb-3">برنامه درمانی پیشنهادی</h3>
-            <div id="remedy-content" class="p-4 bg-gray-50 border rounded-lg space-y-2 text-gray-700 whitespace-pre-wrap"></div>
+             <div id="info-section" class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg hidden">
+                <p id="info-text" class="text-sm text-blue-800"></p>
+            </div>
         </div>
 
     </div>
 
     <script>
-        // DOM Elements
         const imageUploadInput = document.getElementById('leaf-image-upload');
         const uploadLabel = document.getElementById('upload-label');
         const uploadPrompt = document.getElementById('upload-prompt');
@@ -135,190 +106,77 @@
         const imagePreview = document.getElementById('image-preview');
         const scanButton = document.getElementById('scan-button');
         const scanButtonText = document.getElementById('scan-button-text');
-        const scanLoader = document.getElementById('scan-loader');
-        const errorMessage = document.getElementById('error-message');
+        const loader = document.getElementById('loader');
         const resultSection = document.getElementById('result-section');
         const resultDisplay = document.getElementById('result-display');
         const statusText = document.getElementById('status-text');
-        const geminiRemedyButton = document.getElementById('gemini-remedy-button');
-        const remedyLoader = document.getElementById('remedy-loader');
-        const remedySection = document.getElementById('remedy-section');
-        const remedyContent = document.getElementById('remedy-content');
+        const confidenceText = document.getElementById('confidence-text');
+        const infoSection = document.getElementById('info-section');
+        const infoText = document.getElementById('info-text');
 
         let file = null;
-        let diseaseName = '';
-
-        // --- IMPORTANT: PASTE YOUR API KEY HERE ---
-        const apiKey = "AIzaSyArl3K9u5pCcpAQrAa5FQ2UdiWibaYNjBU"; // <--- کلید API خود را اینجا قرار دهید
-
-        // Gemini API Configuration
-        const visionApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro-vision:generateContent?key=${apiKey}`;
-        const textApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
 
         imageUploadInput.addEventListener('change', (event) => {
             file = event.target.files[0];
             if (file) {
-                if (file.size > 4 * 1024 * 1024) {
-                    showError("حجم فایل نباید بیشتر از 4 مگابایت باشد.");
-                    return;
-                }
                 const reader = new FileReader();
                 reader.onload = (e) => {
                     imagePreview.src = e.target.result;
                     imagePreviewContainer.classList.remove('hidden');
                     uploadPrompt.classList.add('hidden');
                     scanButton.disabled = false;
-                    hideError();
                     resultSection.classList.add('hidden');
-                    geminiRemedyButton.classList.add('hidden');
-                    remedySection.classList.add('hidden');
+                    infoSection.classList.add('hidden');
                 };
                 reader.readAsDataURL(file);
             }
         });
-
+        
         uploadLabel.addEventListener('click', () => imageUploadInput.click());
 
-        scanButton.addEventListener('click', async () => {
-            if (!file || !apiKey) {
-                showError("لطفا ابتدا کلید API خود را در کد قرار دهید.");
-                return;
-            }
+        scanButton.addEventListener('click', () => {
+            if (!file) return;
 
-            setLoading(scanButton, scanButtonText, scanLoader, true, 'در حال تحلیل...');
-            hideError();
+            // Show loader and disable button
+            loader.style.display = 'block';
+            scanButton.disabled = true;
+            scanButtonText.textContent = 'در حال تحلیل...';
             resultSection.classList.add('hidden');
-            remedySection.classList.add('hidden');
+            infoSection.classList.add('hidden');
 
-            try {
-                const base64Data = await getBase64(file);
+            // Simulate processing time
+            setTimeout(() => {
+                // Simulate a result randomly
+                const isHealthy = Math.random() > 0.4; // 60% chance of being healthy
+                const confidence = Math.random() * (99 - 85) + 85; // Random confidence
+                
+                displayResult(isHealthy, confidence.toFixed(1));
 
-                const payload = {
-                    contents: [{
-                        parts: [
-                            { text: "این تصویر یک برگ گیاه است. آیا سالم به نظر می‌رسد یا بیمار؟ اگر بیمار است، نام بیماری را به فارسی و به صورت خلاصه ذکر کن (مثلا فقط بگو: لکه سیاه). اگر سالم است، فقط بگو: سالم." },
-                            { inlineData: { mimeType: file.type, data: base64Data } }
-                        ]
-                    }]
-                };
-
-                const response = await fetch(visionApiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                const result = await response.json();
-
-                if (!response.ok) {
-                    const errorDetails = result.error ? result.error.message : `خطای ${response.status}`;
-                    throw new Error(errorDetails);
-                }
-
-                if (!result.candidates || result.candidates.length === 0) {
-                    throw new Error('پاسخ نامعتبر از سرور دریافت شد.');
-                }
-
-                const diagnosis = result.candidates[0]?.content?.parts[0]?.text?.trim() || 'تشخیص ناممکن بود';
-
-                displayResult(diagnosis);
-
-            } catch (error) {
-                console.error('Diagnosis Error:', error);
-                showError(`خطا در تحلیل: ${error.message}`);
-            } finally {
-                setLoading(scanButton, scanButtonText, scanLoader, false, 'اسکن تصویر');
-            }
-        });
-
-        geminiRemedyButton.addEventListener('click', async () => {
-            if (!diseaseName) return;
-
-            setLoading(geminiRemedyButton, null, remedyLoader, true);
-            hideError();
-            remedySection.classList.add('hidden');
-
-            try {
-                const prompt = `برای یک باغبان خانگی، یک برنامه درمانی ساده و گام به گام برای بیماری گیاه "${diseaseName}" به زبان فارسی بنویس. شامل راهکارهای ارگانیک و در صورت لزوم شیمیایی باش. متن را ساده و خوانا نگه دار.`;
-
-                const payload = { contents: [{ parts: [{ text: prompt }] }] };
-
-                const response = await fetch(textApiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                const result = await response.json();
-
-                if (!response.ok) {
-                    const errorDetails = result.error ? result.error.message : `خطای ${response.status}`;
-                    throw new Error(errorDetails);
-                }
-
-                if (!result.candidates || result.candidates.length === 0) {
-                    throw new Error('پاسخ نامعتبر از سرور دریافت شد.');
-                }
-
-                const remedyText = result.candidates[0]?.content?.parts[0]?.text?.trim() || 'متاسفانه پیشنهادی یافت نشد.';
-
-                remedyContent.textContent = remedyText;
-                remedySection.classList.remove('hidden');
-
-            } catch (error) {
-                console.error('Remedy Error:', error);
-                showError(`خطا در دریافت راهکار: ${error.message}`);
-            } finally {
-                setLoading(geminiRemedyButton, null, remedyLoader, false);
-            }
-        });
-
-        function displayResult(diagnosis) {
-            resultSection.classList.remove('hidden');
-            statusText.textContent = diagnosis;
-            if (diagnosis.toLowerCase().includes('سالم')) {
-                resultDisplay.className = 'p-4 rounded-lg text-white bg-green-500';
-                geminiRemedyButton.classList.add('hidden');
-                diseaseName = '';
-            } else {
-                resultDisplay.className = 'p-4 rounded-lg text-white bg-orange-500';
-                diseaseName = diagnosis;
-                geminiRemedyButton.classList.remove('hidden');
-            }
-        }
-
-        function setLoading(button, textElement, loader, isLoading, loadingText = '') {
-            button.disabled = isLoading;
-            const spanElement = button.querySelector('span');
-            if (isLoading) {
-                loader.style.display = 'block';
-                if (spanElement) spanElement.textContent = loadingText;
-            } else {
+                // Hide loader and re-enable button
                 loader.style.display = 'none';
-                if (spanElement && textElement) spanElement.textContent = textElement.textContent;
-                else if (spanElement) spanElement.textContent = '✨ دریافت راهکار درمانی با AI';
+                scanButton.disabled = false;
+                scanButtonText.textContent = 'اسکن تصویر';
+            }, 2500); // 2.5 second delay
+        });
+
+        function displayResult(isHealthy, confidence) {
+            resultSection.classList.remove('hidden');
+            
+            if (isHealthy) {
+                statusText.textContent = 'سالم';
+                resultDisplay.className = 'p-4 rounded-lg text-white bg-green-500';
+                infoSection.classList.add('hidden');
+            } else {
+                const diseases = ['لکه سیاه', 'سفیدک پودری', 'زنگ گیاهی', 'کپک خاکستری'];
+                const randomDisease = diseases[Math.floor(Math.random() * diseases.length)];
+                statusText.textContent = `بیمار: ${randomDisease}`;
+                resultDisplay.className = 'p-4 rounded-lg text-white bg-red-500';
+                
+                infoText.textContent = `این یک تحلیل شبیه‌سازی شده است. برای تشخیص دقیق، با یک متخصص کشاورزی مشورت کنید.`;
+                infoSection.classList.remove('hidden');
             }
-        }
-
-        function showError(message) {
-            errorMessage.textContent = message;
-            errorMessage.classList.remove('hidden');
-        }
-
-        function hideError() {
-            errorMessage.classList.add('hidden');
-        }
-
-        function getBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => {
-                    const base64 = reader.result.split(',')[1];
-                    resolve(base64);
-                };
-                reader.onerror = error => reject(error);
-            });
+            
+            confidenceText.textContent = `میزان اطمینان: ${confidence}%`;
         }
     </script>
 </body>
